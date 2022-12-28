@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { DataSource } from '@angular/cdk/collections';
 import { Observable, ReplaySubject, takeUntil, tap } from 'rxjs';
 import { UserService } from './user.service';
@@ -14,10 +14,10 @@ export interface IUser {
 }
 
 /**
- * @title Basic use of `<table mat-table>`
+ * @title user list with action buttons
  */
 @Component({
-  selector: 'table-basic-example',
+  selector: 'app-user-list',
   styleUrls: ['user-list.component.css'],
   templateUrl: 'user-list.component.html',
   providers: [UserService],
