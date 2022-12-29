@@ -1,10 +1,10 @@
 import { Component, ViewChild } from '@angular/core';
-import { DataSource } from '@angular/cdk/collections';
-import { Observable, ReplaySubject, takeUntil, tap } from 'rxjs';
+import { ReplaySubject, takeUntil } from 'rxjs';
 import { UserService } from './user.service';
 import { MatDialog } from '@angular/material/dialog';
 import { UpserUserDialogComponent } from './upser-user-dialog.component';
 import { MatTable } from '@angular/material/table';
+import { ReactiveDataSource } from './reactive-data-source';
 
 export interface IUser {
   id: number;
@@ -57,16 +57,4 @@ export class UserListComponent {
     this.destroy$$.next();
     this.destroy$$.complete();
   }
-}
-
-class ReactiveDataSource<T extends any[]> extends DataSource<T> {
-  constructor(private dataStream: Observable<T>) {
-    super();
-  }
-
-  connect(): Observable<T> {
-    return this.dataStream;
-  }
-
-  disconnect() {}
 }
