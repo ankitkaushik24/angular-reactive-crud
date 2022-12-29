@@ -17,44 +17,57 @@ export class UserService {
   deleteUserAction$$ = new Subject<IUser>();
   updateUserAction$$ = new Subject<IUser>();
 
+  addPredicate(user: IUser) {
+    return (users: IUser[]) => users.concat(user);
+  }
+
+  updatePredicate = (user: IUser) => (users: IUser[]) => {
+    return users.map((u) => {
+      if (u.id === user.id) {
+        return user;
+      }
+      return u;
+    });
+  };
+
+  deletePredicate = (user: IUser) => (users: IUser[]) =>
+    users.filter((u) => u.id !== user.id);
+
   private userAdded$ = this.addUserAction$$.pipe(
     switchMap((userToBeAdded) => this.addUser(userToBeAdded)),
-    map((user) => (users: IUser[]) => users.concat(user))
+    map((user) => this.addPredicate(user))
   );
 
   private userUpdated$ = this.updateUserAction$$.pipe(
     switchMap((userToBeUpdated) => this.updateUser(userToBeUpdated)),
-    map((user) => (users: IUser[]) => {
-      return users.map((u) => {
-        if (u.id === user.id) {
-          return user;
-        }
-        return u;
-      });
-    })
+    map((user) => this.updatePredicate(user))
   );
 
   private userDeleted$ = this.deleteUserAction$$.pipe(
     switchMap((userToBeDeleted) => this.deleteUser(userToBeDeleted)),
-    map((user) => (users: IUser[]) => users.filter((u) => u.id !== user.id))
+    map((user) => this.deletePredicate(user))
   );
 
   private fetchedUsers$ = this.http
     .get<IUser[]>('api/users')
     .pipe(shareReplay({ bufferSize: 1, refCount: true }));
 
-  private actions$ = merge(this.userAdded$, this.userUpdated$, this.userDeleted$);
+  private userEvent$ = merge(
+    this.userAdded$,
+    this.userUpdated$,
+    this.userDeleted$
+  );
 
-  users$ = this.actions$.pipe(
+  users$ = this.userEvent$.pipe(
     startWith(null),
     switchMap(() => this.fetchedUsers$)
   );
 
   latestUsers$ = this.fetchedUsers$.pipe(
     switchMap((users) =>
-      this.actions$.pipe(
+      this.userEvent$.pipe(
         startWith((latest) => latest),
-        scan((latestUsers, fn) => fn(latestUsers), users)
+        scan((latestUsers, predicateFn) => predicateFn(latestUsers), users)
       )
     )
   );
